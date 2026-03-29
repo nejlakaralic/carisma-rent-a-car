@@ -1,0 +1,476 @@
+﻿@model IEnumerable<Carisma.Models.Podrska>
+
+@{
+    ViewData["Title"] = "Centar za podršku";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var hitnostFilter = ViewBag.HitnostFilter as string;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary">
+                <i class="fas fa-headset me-2"></i>
+                Carisma Centar za podršku
+            </h2>
+            <p class="text-muted mb-0">
+                @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+                {
+                    <span>Upravljanje zahtjevima podrške</span>
+                }
+                else
+                {
+                    <span>Vaši zahtjevi za podršku</span>
+                }
+            </p>
+        </div>
+        <div>
+            @if (!User.IsInRole("Podrska") && !User.IsInRole("Administrator"))
+            {
+                <a asp-action="Create" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-1"></i>
+                    Novi zahtjev
+                </a>
+            }
+            @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+            {
+                <a asp-action="Statistike" class="btn btn-outline-info me-2">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Statistike
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Success/Error poruke -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filteri -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label small fw-bold">Status zahtjeva:</label>
+                    <select name="statusFilter" id="statusFilter" class="form-select form-select-sm">
+                        <option value="">🔍 Svi statusi</option>
+                        <option value="0" selected="@(statusFilter == "0")">🔵 Otvoren</option>
+                        <option value="1" selected="@(statusFilter == "1")">🟡 U obradi</option>
+                        <option value="2" selected="@(statusFilter == "2")">⏳ Čeka odgovor</option>
+                        <option value="3" selected="@(statusFilter == "3")">✅ Zatvoren</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="hitnostFilter" class="form-label small fw-bold">Hitnost:</label>
+                    <select name="hitnostFilter" id="hitnostFilter" class="form-select form-select-sm">
+                        <option value="">🔍 Sve hitnosti</option>
+                        <option value="0" selected="@(hitnostFilter == "0")">🟢 Niska</option>
+                        <option value="1" selected="@(hitnostFilter == "1")">🔵 Srednja</option>
+                        <option value="2" selected="@(hitnostFilter == "2")">🟡 Visoka</option>
+                        <option value="3" selected="@(hitnostFilter == "3")">🔴 Kritična</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-filter me-1"></i>
+                            Filtriraj
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times me-1"></i>
+                            Očisti filtere
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistike (samo za podrška tim) -->
+    @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@Model.Count(x => x.Status == Carisma.Models.statusZahtjeva.Otvoren)</h5>
+                        <p class="card-text">Otvoreni zahtjevi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@Model.Count(x => x.Status == Carisma.Models.statusZahtjeva.UObradi)</h5>
+                        <p class="card-text">U obradi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@Model.Count(x => x.Hitnost == Carisma.Models.NivoHitnosti.Kriticna && x.Status != Carisma.Models.statusZahtjeva.Zatvoren)</h5>
+                        <p class="card-text">Kritični zahtjevi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@Model.Count(x => x.Status == Carisma.Models.statusZahtjeva.Zatvoren)</h5>
+                        <p class="card-text">Zatvoreni zahtjevi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Lista zahtjeva -->
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-xl-6 col-lg-12 mb-4">
+                    <div class="card h-100 shadow-sm border-0 @(item.Hitnost == Carisma.Models.NivoHitnosti.Kriticna ? "border-danger border-2" : "")">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">
+                                    <strong>Zahtjev #@item.Id</strong>
+                                    <!-- NOVA NOTIFIKACIJA OVDJE -->
+                                    @if (item.ImaNoviOdgovor && !User.IsInRole("Podrska") && !User.IsInRole("Administrator"))
+                                    {
+                                        <span class="badge bg-success pulse ms-2">
+                                            <i class="fas fa-bell me-1"></i>
+                                            NOVI ODGOVOR!
+                                        </span>
+                                    }
+                                    <span class="@item.PrioritetniBadge ms-2">
+                                        @switch(item.Hitnost)
+                                        {
+                                            case Carisma.Models.NivoHitnosti.Niska:
+                                                <text>🟢 Niska</text>
+                                                break;
+                                            case Carisma.Models.NivoHitnosti.Srednja:
+                                                <text>🔵 Srednja</text>
+                                                break;
+                                            case Carisma.Models.NivoHitnosti.Visoka:
+                                                <text>🟡 Visoka</text>
+                                                break;
+                                            case Carisma.Models.NivoHitnosti.Kriticna:
+                                                <text>🔴 Kritična</text>
+                                                break;
+                                        }
+                                    </span>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    @item.DatumPostavljanja?.ToString("dd.MM.yyyy HH:mm")
+                                    @if (!item.IsRegisteredUser)
+                                    {
+                                        <span class="badge bg-secondary ms-2" title="Legacy zahtjev - od prije uvođenja obavezne registracije">
+                                            <i class="fas fa-history me-1"></i>
+                                            Legacy
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success ms-2">
+                                            <i class="fas fa-user-check me-1"></i>
+                                            Registrovan
+                                        </span>
+                                    }
+                                </small>
+                            </div>
+                            <span class="@item.StatusBadge">
+                                @switch(item.Status)
+                                {
+                                    case Carisma.Models.statusZahtjeva.Otvoren:
+                                        <text>🔵 Otvoren</text>
+                                        break;
+                                    case Carisma.Models.statusZahtjeva.UObradi:
+                                        <text>🟡 U obradi</text>
+                                        break;
+                                    case Carisma.Models.statusZahtjeva.CekaOdgovor:
+                                        <text>⏳ Čeka odgovor</text>
+                                        break;
+                                    case Carisma.Models.statusZahtjeva.Zatvoren:
+                                        <text>✅ Zatvoren</text>
+                                        break;
+                                }
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <!-- DODATNA NOTIFIKACIJA U TIJELU KARTICE -->
+                            @if (item.ImaNoviOdgovor && !User.IsInRole("Podrska") && !User.IsInRole("Administrator"))
+                            {
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <strong>Imate novi odgovor!</strong> Kliknite na "Detalji" da vidite odgovor.
+                                </div>
+                            }
+                            
+                            <p class="card-text">
+                                @(item.Pitanje != null && item.Pitanje.Length > 150 ? item.Pitanje.Substring(0, 150) + "..." : item.Pitanje)
+                            </p>
+                            
+                            @if (!string.IsNullOrEmpty(item.Odgovor))
+                            {
+                                <div class="alert alert-success py-2 small mb-2">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Odgovoreno @item.DatumOdgovora?.ToString("dd.MM.yyyy")
+                                    @if (item.OcjenaKorisnika.HasValue)
+                                    {
+                                        <span class="float-end">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star @(i <= item.OcjenaKorisnika ? "text-warning" : "text-muted")"></i>
+                                            }
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm @(item.ImaNoviOdgovor && !User.IsInRole("Podrska") && !User.IsInRole("Administrator") ? "btn-success" : "")">
+                                        <i class="fas fa-eye me-1"></i>
+                                        @if (item.ImaNoviOdgovor && !User.IsInRole("Podrska") && !User.IsInRole("Administrator"))
+                                        {
+                                            <text>Pogledaj novi odgovor</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Detalji</text>
+                                        }
+                                    </a>
+                                    @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm ms-1">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Odgovori
+                                        </a>
+                                    }
+                                </div>
+                                @if (item.Hitnost == Carisma.Models.NivoHitnosti.Kriticna && item.Status != Carisma.Models.statusZahtjeva.Zatvoren)
+                                {
+                                    <span class="badge bg-danger pulse">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        HITNO!
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Paginacija (ako je potrebna) -->
+        @if (Model.Count() >= 10)
+        {
+            <nav aria-label="Paginacija zahtjeva" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Nema zahtjeva za podršku</h4>
+            <p class="text-muted">
+                @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+                {
+                    <span>Trenutno nema zahtjeva koji odgovaraju vašim kriterijima.</span>
+                }
+                else
+                {
+                    <span>Nemate aktivnih zahtjeva za podršku. Ako imate problema, slobodno kontaktirajte naš tim.</span>
+                }
+            </p>
+            @if (!User.IsInRole("Podrska") && !User.IsInRole("Administrator"))
+            {
+                <a asp-action="Create" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-1"></i>
+                    Kreiraj novi zahtjev
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Dodatni stilovi za notifikacije */
+    .badge.pulse {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .btn.pulse {
+        box-shadow: 0 0 15px rgba(25, 135, 84, 0.3);
+    }
+
+    /* Border animacija za kritične zahtjeve */
+    .border-danger.border-2 {
+        animation: borderPulse 3s infinite;
+    }
+
+    @@keyframes borderPulse {
+        0%, 100% {
+            border-color: #dc3545;
+        }
+        50% {
+            border-color: #ff6b7d;
+        }
+    }
+
+    /* Smooth scroll */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Auto-dismiss styling */
+    .alert {
+        transition: opacity 0.3s ease-in-out;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss alert poruka nakon 5 sekundi
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            @if (User.IsInRole("Podrska") || User.IsInRole("Administrator"))
+            {
+                <text>
+                // Auto-refresh statistika svakih 30 sekundi za podrška tim
+                setInterval(function() {
+                    console.log('Provjera novih zahtjeva...');
+                }, 30000);
+                </text>
+            }
+
+            // Smooth scroll za dugmad
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+
+      
+        @if (TempData["Success"] != null)
+        {
+            <text>
+            Swal.fire({
+                icon: 'success',
+                title: 'Uspjeh!',
+                text: '@TempData["Success"]',
+                confirmButtonText: 'U redu',
+                timer: 3000,
+                timerProgressBar: true
+            });
+            </text>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <text>
+            Swal.fire({
+                icon: 'error',
+                title: 'Greška!',
+                text: '@TempData["Error"]',
+                confirmButtonText: 'U redu'
+            });
+            </text>
+        }
+    </script>
+}

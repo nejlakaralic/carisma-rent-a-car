@@ -1,0 +1,303 @@
+﻿@model Carisma.Models.Rezervacija
+
+@{
+    ViewData["Title"] = "Potvrda i plaćanje";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Potvrda i plaćanje rezervacije
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- Pregled rezervacije -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <img src="~/images/vozila/@(GetVoziloImage(Model.vozilo.Marka, Model.vozilo.Model))"
+                                 class="img-fluid rounded"
+                                 alt="@Model.vozilo.Marka @Model.vozilo.Model" />
+                        </div>
+                        <div class="col-md-8">
+                            <h5 class="text-primary">@Model.vozilo.Marka @Model.vozilo.Model</h5>
+                            <p class="text-muted">Godina: @Model.vozilo.Godina</p>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>Datum početka:</strong><br />
+                                    @Model.datumPocetka.ToString("dd.MM.yyyy")
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Datum završetka:</strong><br />
+                                    @Model.datumZavrsetka.ToString("dd.MM.yyyy")
+                                </div>
+                            </div>
+
+                            <div class="mt-2">
+                                <strong>Broj dana:</strong> @((Model.datumZavrsetka.Date - Model.datumPocetka.Date).Days + 1)
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Izračun cijene -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-receipt me-2"></i>Specifikacija cijene
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Cijena po danu:</span>
+                                        <span>@Model.vozilo.CijenaPoDanu.ToString("F2") KM</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Broj dana:</span>
+                                        <span>@((Model.datumZavrsetka.Date - Model.datumPocetka.Date).Days + 1)</span>
+                                    </div>
+                                    <hr />
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Ukupna cijena:</strong>
+                                        <strong class="text-success h5">@Model.cijena.ToString("F2") KM</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uvjeti plaćanja -->
+                    <div class="card border-info mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Uvjeti plaćanja
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>Plaćanje se vrši sigurno preko Stripe platforme.</li>
+                                <li>Prihvatamo sve glavne kreditne i debitne kartice.</li>
+                                <li>Rezervacija je aktivna odmah nakon uspješnog plaćanja.</li>
+                                <li>Vozilo možete preuzeti na dan početka rezervacije.</li>
+                                <li>U slučaju problema, kontaktirajte našu podršku.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Test mode info -->
+                    <div class="alert alert-warning" role="alert">
+                        <h6><i class="fas fa-flask me-2"></i><strong>TEST REŽIM</strong></h6>
+                        <p class="mb-2">Aplikacija je u test režimu. Koristite sljedeće test kartice:</p>
+                        <ul class="mb-0">
+                            <li><strong>Uspješno plaćanje:</strong> 4242 4242 4242 4242</li>
+                            <li><strong>Odbačeno plaćanje:</strong> 4000 0000 0000 0002</li>
+                            <li><strong>CVV:</strong> bilo koji 3-cifren broj</li>
+                            <li><strong>Datum:</strong> bilo koji budući datum</li>
+                        </ul>
+                    </div>
+
+                    <!-- Potvrda odgovornosti -->
+                    <div class="card border-warning mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Finalna potvrda
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="prihvatamOdgovornost" required />
+                                <label class="form-check-label" for="prihvatamOdgovornost">
+                                    <strong>Potvrđujem</strong> da sam pročitao/la sve uvjete i da prihvatam punu odgovornost
+                                    za vozilo tokom perioda iznajmljivanja. Slažem se da ću platiti svu štetu nastalu mojom krivicom.
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stripe Payment Form -->
+                    <div class="card border-primary mb-4" id="payment-section" style="display: none;">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-lock me-2"></i>Sigurno plaćanje
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="payment-form">
+                                <div id="payment-element">
+                                    
+                                </div>
+                                <div id="payment-errors" role="alert" class="alert alert-danger mt-3" style="display: none;"></div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Dugmad -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-controller="Vozilo" asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Vrati se na vozila
+                        </a>
+                        <button type="button" class="btn btn-success btn-lg" id="dugmePotvrdi" disabled>
+                            <i class="fas fa-check me-2"></i>Potvrdi i plati rezervaciju
+                        </button>
+                    </div>
+
+                    <!-- Loading overlay -->
+                    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+                        <div class="d-flex justify-content-center align-items-center h-100">
+                            <div class="text-center text-white">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-2">Obrađujemo plaćanje...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetVoziloImage(string marka, string model)
+    {
+        string fileName = $"{marka.ToLower()}-{model.ToLower().Replace(" ", "-")}.jpg";
+        return fileName;
+    }
+}
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        // Stripe konfiguracija - TEST MODE
+        const stripe = Stripe('@ViewBag.StripePublishableKey'); 
+        let elements;
+        let paymentElement;
+
+        $(document).ready(function() {
+            // Checkbox za uvjete
+            $('#prihvatamOdgovornost').on('change', function() {
+                const isChecked = this.checked;
+                $('#dugmePotvrdi').prop('disabled', !isChecked);
+
+                if (isChecked) {
+                    $('#payment-section').show();
+                    initializeStripe();
+                } else {
+                    $('#payment-section').hide();
+                }
+            });
+
+            // Dugme za plaćanje
+            $('#dugmePotvrdi').on('click', function() {
+                handlePayment();
+            });
+        });
+
+        async function initializeStripe() {
+            try {
+                // Kreiraj PaymentIntent na serveru
+                const response = await fetch('@Url.Action("CreatePaymentIntent", "Rezervacija")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({
+                        rezervacijaId: @Model.Id,
+                        amount: @((int)(Model.cijena * 100)) // Amount u centima
+                    })
+                });
+
+                const { clientSecret, error } = await response.json();
+
+                if (error) {
+                    showError(error);
+                    return;
+                }
+
+                // Inicijalizuj Stripe Elements
+                elements = stripe.elements({
+                    clientSecret: clientSecret,
+                    appearance: {
+                        theme: 'stripe',
+                        variables: {
+                            colorPrimary: '#28a745',
+                        }
+                    }
+                });
+
+                paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+
+            } catch (error) {
+                console.error('Error initializing Stripe:', error);
+                showError('Greška pri učitavanju forme za plaćanje. Molimo pokušajte ponovo.');
+            }
+        }
+
+        async function handlePayment() {
+            if (!elements) {
+                showError('Forma za plaćanje nije učitana. Molimo pokušajte ponovo.');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const { error, paymentIntent } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: '@Url.Action("PaymentSuccess", "Rezervacija", new { id = Model.Id }, Context.Request.Scheme)',
+                    },
+                    redirect: 'if_required'
+                });
+
+                if (error) {
+                    showError(error.message);
+                } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                    
+                    window.location.href = '@Url.Action("PaymentSuccess", "Rezervacija", new { id = Model.Id })';
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showError('Došlo je do greške tokom plaćanja. Molimo pokušajte ponovo.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = $('#payment-errors');
+            errorDiv.text(message).show();
+
+            
+            setTimeout(() => {
+                errorDiv.hide();
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $('#loading-overlay').show();
+                $('#dugmePotvrdi').prop('disabled', true);
+            } else {
+                $('#loading-overlay').hide();
+                $('#dugmePotvrdi').prop('disabled', false);
+            }
+        }
+    </script>
+}
