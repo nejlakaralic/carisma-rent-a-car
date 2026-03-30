@@ -1,41 +1,85 @@
-# 🚗 Carisma – Rent a Car
+# Carisma – Rent a Car
 
-**Grupa 2 – Tim2**  
-Aplikacija za iznajmljivanje vozila sa online rezervacijama i plaćanjem.
-
----
-
-## 👥 Tim
-
-- Nejla Karalić 
-- Ajla Islamović 
-- Lejla Gičević 
-- Ena Gicić 
+A web application for vehicle rental with online reservations and payment functionality.
 
 ---
 
-## 🌐 Demo
+## Team Members
 
-http://ooadtimm-001-site1.anytempurl.com/
-
----
-
-## 🔐 Testni korisnici
-
-| Email                        | Lozinka     | Uloga         |
-|------------------------------|-------------|---------------|
-| podrska@gmail.com            | Ooad2025!   | Radnik        |
-| user@gmail.com               | Ooad2025!   | Korisnik      |
-| admin@gmail.com              | Ooad2025!   | Administrator |
+* Nejla Karalić
+* Ajla Islamović
+* Lejla Gičević
+* Ena Gicić
 
 ---
 
-## 🛢️ Baza podataka
-Data Source=sql6031.site4now.net 
+## Test Accounts
 
-Initial Catalog=db_ab9fc3_ooadtimm 
+| Email                                         | Password  | Role          |
+| --------------------------------------------- | --------- | ------------- |
+| [podrska@gmail.com](mailto:podrska@gmail.com) | Ooad2025! | Support Staff |
+| [user@gmail.com](mailto:user@gmail.com)       | Ooad2025! | Customer      |
+| [admin@gmail.com](mailto:admin@gmail.com)     | Ooad2025! | Administrator |
 
-User_id=db_ab9fc3_ooadtimm_admin 
+> These credentials are provided for demonstration purposes only.
 
-Password=OOAD2025
+---
+
+## Tech Stack
+
+* ASP.NET Core (.NET, C#)
+* Entity Framework Core
+* SQL Server (LocalDB)
+* HTML & CSS
+
+---
+
+## Features
+
+* User authentication and role management
+* Vehicle browsing and availability
+* Online reservations
+* Basic payment functionality
+* Admin panel for managing users and vehicles
+
+---
+
+## My Contribution
+
+* Full-stack development (frontend and backend)
+* Database design and implementation (tables, relationships, data management)
+* Business logic implementation
+* UI development and user experience improvements
+* Team collaboration on system integration
+
+---
+
+## Deployment Note
+
+The project was initially deployed online using a remote database, but is currently configured to run with a local SQL Server (LocalDB) due to hosting limitations.
+
+---
+
+## Running the Application
+
+### Prerequisites
+
+* .NET SDK installed
+* SQL Server (LocalDB or full version)
+
+### Setup
+
+1. Clone the repository
+2. Configure the connection string in `appsettings.json`
+3. Apply database migrations
+4. Run the application
+
+The application runs on a local development server.
+
+---
+
+## Additional Notes
+
+Some parts of the codebase (entity names, variables) are written in Bosnian due to initial development, but the overall architecture and logic follow standard software engineering practices.
+---
 
