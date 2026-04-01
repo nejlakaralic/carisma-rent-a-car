@@ -76,10 +76,4 @@ The project was initially deployed online using a remote database, but is curren
 
 The application runs on a local development server.
 
----
-
-## Additional Notes
-
-Some parts of the codebase (entity names, variables) are written in Bosnian due to initial development, but the overall architecture and logic follow standard software engineering practices.
----
 
